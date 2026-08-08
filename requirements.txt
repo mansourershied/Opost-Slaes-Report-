@@ -4,3 +4,4 @@ playwright>=1.45,<2
 openpyxl>=3.1,<4
 python-dotenv>=1.0,<2
 requests>=2.31,<3
+gunicorn>=22,<24
