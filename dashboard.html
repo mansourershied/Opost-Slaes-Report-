@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}لوحة التحكم | Optimus{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div>
+    <span class="eyebrow" data-i18n="live_opost_overview">نظرة مباشرة على OPOST</span>
+    <h1 id="greetingTitle" data-name="{{ current_employee['full_name'] }}" data-greeting="{{ greeting_type }}">{% if greeting_type == 'morning' %}صباح الخير، {{ current_employee['full_name'] }}{% else %}مساء الخير، {{ current_employee['full_name'] }}{% endif %}</h1>
+    <p data-i18n="dashboard_subtitle">ملخص حي لآخر بيانات تم تحميلها من منصة OPOST.</p>
+  </div>
+</div>
+
+<div class="opost-launch-card opost-button-only opost-button-group opost-two-buttons">
+  <a class="primary-button opost-direct-button" href="https://o.opost.ps/en/login?redirect=%2Fen%2Flogistics%2Fresources%2Fshipments" target="_blank" rel="noopener noreferrer" data-i18n="open_opost_new">الدخول إلى OPOST الجديد</a>
+  <a class="primary-button opost-direct-button opost-old-button" href="https://opost.ps/login" target="_blank" rel="noopener noreferrer" data-i18n="open_opost_old">الدخول إلى OPOST القديم</a>
+</div>
+
+<div class="status-strip"><div class="status-icon">◷</div><div><strong>{{ report_period }}</strong><small><span data-i18n="last_update">آخر تحديث</span>: {{ last_updated or 'لم يتم التحديث بعد' }}</small></div><span class="live-badge">OPOST</span></div>
+
+<div class="stats-grid">
+  {% set items=[('accounts_created','الحسابات المنشأة','◆'),('accounts_with_shipments','حسابات أخرجت طرود','◈'),('accounts_without_shipments','حسابات بدون طرود','○'),('best_accounts','أفضل الحسابات','★'),('need_follow_up','تحتاج متابعة','!')] %}
+  {% for key,label,icon in items %}
+  <article class="stat-card"><span class="stat-icon">{{icon}}</span><p data-i18n="{{key}}">{{label}}</p><strong>{{ cards[key] if cards[key] is not none else '—' }}</strong></article>
+  {% endfor %}
+</div>
+
+<div class="quick-grid">
+  <a class="action-card" href="{{ url_for('monthly_report') }}"><span class="action-icon">▣</span><div><h3 data-i18n="create_report">إنشاء تقارير</h3><p data-i18n="report_background_short">حدد الفترة واترك التقرير يعمل في الخلفية.</p></div><b>←</b></a>
+  {% if current_employee['role']=='admin' %}<a class="action-card" href="{{ url_for('employees') }}"><span class="action-icon">♟</span><div><h3 data-i18n="users">مستخدمو الموقع</h3><p data-i18n="manage_users">إدارة حسابات المدير والموظفين.</p></div><b>←</b></a>{% endif %}
+</div>
+{% endblock %}
+

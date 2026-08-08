@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Download Center | Optimus{% endblock %}
+{% block content %}
+<div class="hero-row"><div><span class="eyebrow" data-i18n="file_archive">أرشيف الملفات</span><h1 data-i18n="download_center">مركز التنزيلات</h1><p data-i18n="download_center_subtitle">كل ملفات Excel وPDF التي أنشأها النظام في مكان واحد، بدون الاتصال بـOPOST.</p></div></div>
+<div class="download-toolbar"><label class="download-search"><span>⌕</span><input id="downloadSearch" type="search" data-i18n-placeholder="search_files" placeholder="ابحث باسم الملف"></label><div class="download-filters"><button class="filter-chip active" data-filter="all" data-no-global-loading data-i18n="all_files">الكل</button><button class="filter-chip" data-filter="Excel" data-no-global-loading>Excel</button><button class="filter-chip" data-filter="PDF" data-no-global-loading>PDF</button></div><strong><span id="visibleFileCount">{{files|length}}</span> <span data-i18n="files_count">ملف</span></strong></div>
+<div class="download-list" id="downloadList">{% for file in files %}<article class="download-item" data-name="{{file.name|lower}}" data-type="{{file.type}}"><div class="file-badge {{file.type|lower}}">{{'XLSX' if file.type=='Excel' else 'PDF'}}</div><div class="file-info"><strong>{{file.name}}</strong><span>{{file.created_at}} · {{file.size}}</span></div><a class="primary-button compact" href="{{file.download_url}}" download data-no-global-loading data-i18n="download">تنزيل</a></article>{% endfor %}</div>
+{% if not files %}<div class="empty-state large" data-i18n="no_downloads">لا توجد ملفات محفوظة حتى الآن. أي تقرير Excel أو ملف PDF جديد سيظهر هنا تلقائيًا.</div>{% endif %}
+{% endblock %}
+{% block scripts %}<script>window.initDownloadCenter&&window.initDownloadCenter();</script>{% endblock %}

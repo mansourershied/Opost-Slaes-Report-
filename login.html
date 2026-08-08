@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>تسجيل الدخول | Optimus</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2.2.6">
+</head>
+<body class="login-page">
+  <button id="languageToggle" class="language-button login-language" type="button" aria-label="تغيير اللغة">EN</button>
+  <div class="login-orb orb-one"></div><div class="login-orb orb-two"></div>
+  <section class="login-card">
+    <div class="login-brand-panel">
+      <div class="login-logo-ring"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="Optimus"></div>
+      <span class="eyebrow" data-i18n="optimus_portal">بوابة Optimus</span>
+      <h1>Optimus</h1>
+      <p class="gold-text" data-i18n="express_services">لخدمات البريد السريع</p>
+      <div class="welcome-copy"><h2 id="timeGreeting">مرحباً بك</h2><p data-i18n="login_welcome_copy">بوابة التقارير الداخلية لمتابعة الحسابات وإنشاء الملفات من بيانات OPOST الأصلية.</p></div>
+    </div>
+    <div class="login-form-panel">
+      <div class="login-head"><span class="eyebrow" data-i18n="secure_login">دخول آمن</span><h2 data-i18n="login">تسجيل الدخول</h2><p data-i18n="login_help">أدخل البريد الإلكتروني وكلمة المرور للمتابعة</p></div>
+      {% with messages = get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash {{category}}">{{message}}</div>{% endfor %}{% endwith %}
+      <form method="post" class="login-form" autocomplete="off" id="loginForm">
+        <label><span data-i18n="email">البريد الإلكتروني</span><input type="email" name="email" required autocomplete="username" placeholder="example@company.com" value="{{ entered_email|default('')|e }}"></label>
+        <label><span data-i18n="password">كلمة المرور</span><div class="password-wrap"><input id="passwordInput" type="password" name="password" required autocomplete="new-password" placeholder="••••••••"><button type="button" id="showPassword">◉</button></div></label>
+        <button class="primary-button login-button" type="submit"><span data-i18n="login">تسجيل الدخول</span> <span>←</span></button>
+      </form>
+    </div>
+  </section>
+  <script>
+    if(new URLSearchParams(location.search).get('tab_logout')==='1'){sessionStorage.setItem('optimus_tab_logged_out','1');}
+    document.getElementById('loginForm')?.addEventListener('submit',()=>sessionStorage.removeItem('optimus_tab_logged_out'));
+  </script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=2.2.6"></script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% block title %}Optimus | Business Profile{% endblock %}
+{% block content %}
+<div class="profile-hero profile-hero-premium">
+  <div class="profile-hero-copy">
+    <span class="eyebrow" data-i18n="business_intelligence">تحليل حسابات OPOST</span>
+    <h1 data-i18n="business_profile_title">ملف الحساب الكامل</h1>
+    <p data-i18n="business_profile_subtitle">ابحث باسم الحساب أو Business ID واعرض ملفه الكامل من بيانات OPOST الأصلية.</p>
+  </div>
+  <div class="profile-brand-emblem" aria-hidden="true">
+    <span class="brand-logo profile-logo-motion"><img src="{{ url_for('static', filename='img/logo.png') }}" alt=""></span>
+  </div>
+</div>
+
+<section class="panel profile-search-panel premium-search-panel">
+  <form method="get" class="business-search-form" data-global-loading class="profile-search-form profile-search-only">
+    <label class="profile-query-field">
+      <span data-i18n="search_business">اسم الحساب أو Business ID</span>
+      <div class="search-input-shell">
+        <span>⌕</span>
+        <input name="query" value="{{ query }}" required data-i18n-placeholder="business_search_placeholder" placeholder="اسم الحساب أو Business ID" autocomplete="off">
+      </div>
+    </label>
+    <button class="primary-button profile-search-button" type="submit" data-i18n="search">بحث</button>
+  </form>
+  <p class="search-helper" data-i18n="automatic_performance_period">يتم احتساب أداء الشحنات تلقائيًا خلال فترة حضانة الحساب.</p>
+  {% if error %}<div class="flash error profile-error">{{ error }}</div>{% endif %}
+</section>
+
+{% if results %}
+<section class="panel search-results-panel">
+  <div class="section-heading">
+    <div><span class="eyebrow" data-i18n="search_results">نتائج البحث</span><h2 data-i18n="choose_business">اختر الحساب</h2></div>
+    <span class="result-count">{{ results|length }}</span>
+  </div>
+  <div class="business-results">
+    {% for item in results %}
+    <a class="business-result-card" href="{{ url_for('business_profile', business_id=item.id, query=query) }}">
+      <span class="result-avatar">{{ (item.name[:1] or 'B')|upper }}</span>
+      <div>
+        <strong>{{ item.name or '—' }}</strong>
+        <small><span data-i18n="business_id">رقم الحساب</span>: {{ item.id }}{% if item.phone %} · {{ item.phone }}{% endif %}</small>
+        <small>{{ item.created_at }}</small>
+      </div>
+      <b>←</b>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if profile %}
+<section class="profile-sheet profile-sheet-premium" id="printableProfile">
+  <div class="profile-cover premium-profile-cover">
+    <div class="profile-cover-identity">
+      <span class="profile-account-icon">{{ (profile.row['Business Name'][:1] or 'B')|upper }}</span>
+      <div>
+        <span class="eyebrow" data-i18n="business_cv">ملف حساب OPOST</span>
+        <h2>{{ profile.row['Business Name'] }}</h2>
+        <p><span data-i18n="business_id">رقم الحساب</span>: {{ profile.row['Business ID'] }}</p>
+      </div>
+    </div>
+    <div class="profile-actions no-print">
+      <button class="secondary-button" type="button" onclick="copyBusinessProfile(this)" data-i18n="copy_summary">نسخ ملخص الحساب</button>
+      <div class="pdf-choice">
+        <button class="primary-button" type="button" onclick="openPdfOptions()" data-no-global-loading data-i18n="save_pdf">حفظ PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-kpis premium-kpis">
+    {% set kpis=[('Shipments','total_shipments'),('Closed %','closed_rate'),('COD','cod_shipments'),('R','exchange_shipments')] %}
+    {% for key,label_key in kpis %}
+    <article><span data-i18n="{{ label_key }}">{{ label_key }}</span><strong>{{ profile.row.get(key,0) }}{% if '%' in key %}%{% endif %}</strong></article>
+    {% endfor %}
+  </div>
+
+
+  <div class="profile-columns premium-profile-columns">
+    <section class="profile-block">
+      <h3 data-i18n="business_identity">بيانات الحساب</h3>
+      <dl class="profile-details">
+        {% set identity_fields=[
+          ('Business ID','business_id'),('Business Name','business_name'),('Phone','phone'),
+          ('Created At','created_at'),('Account Age','account_age'),('Incubation','incubation_status'),
+          ('Account Manager','account_manager'),('Office','office')
+        ] %}
+        {% for key,label_key in identity_fields %}
+        <div><dt data-i18n="{{ label_key }}">{{ label_key }}</dt><dd>{% if key == 'Incubation' %}<span data-i18n="{{ 'in_incubation' if profile.row.get(key) == 'YES' else 'out_incubation' }}">{{ profile.row.get(key,'—') or '—' }}</span>{% else %}{{ profile.row.get(key,'—') or '—' }}{% endif %}</dd></div>
+        {% endfor %}
+      </dl>
+    </section>
+    <section class="profile-block">
+      <h3 data-i18n="shipment_performance">أداء الشحنات</h3>
+      <dl class="profile-details performance-details">
+        {% set performance_fields=[
+          ('Shipments','total_shipments'),('Closed','closed_shipments'),('COD','cod_shipments'),('Delivered','delivered_closed_shipments'),
+          ('R','exchange_shipments'),('Returned','returned_shipments'),('Cancelled','cancelled_shipments'),('Draft','draft_shipments'),
+          ('Submitted','submitted_shipments'),('Other Status','other_status_shipments'),('Closed %','closed_rate'),('Successful Delivery %','delivery_rate'),('Returned %','return_rate')
+        ] %}
+        {% for key,label_key in performance_fields %}
+        <div><dt data-i18n="{{ label_key }}">{{ label_key }}</dt><dd>{{ profile.row.get(key,0) }}{% if '%' in key %}%{% endif %}</dd></div>
+        {% endfor %}
+      </dl>
+    </section>
+  </div>
+
+  {% if profile.fields %}
+  <section class="profile-block full-fields curated-fields">
+    <h3 data-i18n="opost_fields">تفاصيل إضافية من OPOST</h3>
+    <div class="field-grid">
+      {% for field in profile.fields %}<div><span data-i18n="{{ field.translation_key }}">{{ field.label }}</span><strong>{{ field.value }}</strong></div>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if profile.fees %}
+  <section class="profile-block full-fields profile-fees-block">
+    <div class="section-heading"><div><span class="eyebrow" data-i18n="fees_details">تفاصيل الرسوم</span><h3 data-i18n="business_fees">رسوم الحساب حسب المدن</h3></div><span class="result-count">{{ profile.fees|length }}</span></div>
+    <div class="profile-fees-table-wrap">
+      <table class="profile-fees-table">
+        <thead><tr><th data-i18n="fee_city">المدينة / المنطقة</th><th data-i18n="delivery_fee">رسوم التوصيل</th><th data-i18n="cancel_fee">رسوم الإلغاء</th><th data-i18n="rest_of_cities">باقي المدن</th></tr></thead>
+        <tbody>{% for fee in profile.fees %}<tr><td>{{ fee.city }}</td><td>{{ fee.fee }}</td><td>{{ fee.cancel_fee }}</td><td>{{ fee.rest_of_cities or '—' }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if profile.identity %}
+  <section class="profile-identity-image-block profile-identity-last">
+    <div class="section-heading"><div><span class="eyebrow" data-i18n="identity_document">وثيقة الهوية</span><h3 data-i18n="business_identity_image">صورة هوية مالك الحساب</h3></div><span class="identity-status" data-i18n="identity_available">متوفرة</span></div>
+    <div class="identity-image-frame"><img src="{{ url_for('identity_image', business_id=profile.row['Business ID']) }}" alt="Business identity"></div>
+    <label class="identity-pdf-option no-print"><input type="checkbox" id="includeIdentityPdf" checked><span data-i18n="include_identity_pdf">تضمين صورة الهوية في PDF</span></label>
+  </section>
+  {% endif %}
+
+  <footer class="profile-footer"><span data-i18n="generated_at">تم إنشاء الملف في</span> {{ profile.generated_at }}</footer>
+</section>
+{% endif %}
+
+<div class="pdf-options-modal" id="pdfOptionsModal" aria-hidden="true">
+  <div class="pdf-options-dialog" role="dialog" aria-modal="true" aria-labelledby="pdfOptionsTitle">
+    <div class="pdf-options-head">
+      <div><span class="eyebrow" data-i18n="pdf_options">خيارات ملف PDF</span><h3 id="pdfOptionsTitle" data-i18n="choose_pdf_options">اختر إعدادات ملف PDF</h3></div>
+      <button type="button" class="pdf-modal-close" onclick="closePdfOptions()" data-no-global-loading aria-label="Close">×</button>
+    </div>
+    <div class="pdf-options-grid">
+      <label><span data-i18n="pdf_colors">الألوان</span><select id="pdfTheme"><option value="official" data-i18n="pdf_official_colors">ألوان رسمية للطباعة</option><option value="site" data-i18n="pdf_site_colors">ألوان الموقع</option></select></label>
+      <label><span data-i18n="pdf_language">لغة الملف</span><select id="pdfLanguage"><option value="ar" data-i18n="arabic_language">العربية</option><option value="en" data-i18n="english_language">English</option></select></label>
+    </div>
+    <div class="pdf-options-actions">
+      <button type="button" class="secondary-button" onclick="closePdfOptions()" data-no-global-loading data-i18n="cancel">إلغاء</button>
+      <button type="button" class="primary-button" id="confirmPdfButton" onclick="downloadBusinessProfilePdf()" data-no-global-loading data-i18n="create_pdf">إنشاء PDF</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function copyBusinessProfile(button){
+  const sheet=document.getElementById('printableProfile'); if(!sheet)return;
+  const original=button.textContent;
+  try{await navigator.clipboard.writeText(sheet.innerText.trim());}
+  catch(error){const area=document.createElement('textarea');area.value=sheet.innerText.trim();document.body.appendChild(area);area.select();document.execCommand('copy');area.remove();}
+  button.textContent=document.documentElement.lang==='en'?'Copied':'تم النسخ';
+  setTimeout(()=>button.textContent=original,1800);
+}
+function openPdfOptions(){
+  const modal=document.getElementById('pdfOptionsModal'); if(!modal)return;
+  const lang=document.documentElement.lang==='en'?'en':'ar';
+  const langSelect=document.getElementById('pdfLanguage'); if(langSelect)langSelect.value=lang;
+  modal.classList.add('visible'); modal.setAttribute('aria-hidden','false');
+}
+function closePdfOptions(){
+  const modal=document.getElementById('pdfOptionsModal'); if(!modal)return;
+  modal.classList.remove('visible'); modal.setAttribute('aria-hidden','true');
+}
+async function downloadBusinessProfilePdf(){
+  const theme=document.getElementById('pdfTheme')?.value||'official';
+  const language=document.getElementById('pdfLanguage')?.value||'ar';
+  const include=document.getElementById('includeIdentityPdf');
+  const businessId={{ (profile.row['Business ID'] if profile else '')|tojson }};
+  if(!businessId)return;
+  const button=document.getElementById('confirmPdfButton');
+  const original=button?.textContent||'';
+  closePdfOptions();
+  window.showGlobalLoading?.({persistent:true});
+  if(button)button.disabled=true;
+  try{
+    const url=new URL({{ url_for('business_profile_pdf')|tojson }},window.location.origin);
+    url.searchParams.set('business_id',businessId);
+    url.searchParams.set('theme',theme);
+    url.searchParams.set('language',language);
+    url.searchParams.set('include_identity',(!include||include.checked)?'1':'0');
+    const response=await fetch(url.toString(),{credentials:'same-origin'});
+    if(!response.ok)throw new Error('PDF generation failed');
+    const blob=await response.blob();
+    const disposition=response.headers.get('content-disposition')||'';
+    const match=disposition.match(/filename\*=UTF-8''([^;]+)/i)||disposition.match(/filename="?([^";]+)"?/i);
+    const filename=match?decodeURIComponent(match[1]):`Business Profile - ${businessId}.pdf`;
+    const link=document.createElement('a');
+    const objectUrl=URL.createObjectURL(blob);
+    link.href=objectUrl; link.download=filename; link.style.display='none'; document.body.appendChild(link);
+    // The PDF is fully generated once the Blob arrives. Hide the overlay before
+    // handing the completed file to the browser download manager.
+    window.hideGlobalLoading?.();
+    document.documentElement.classList.remove('is-global-loading');
+    link.click(); link.remove();
+    setTimeout(()=>URL.revokeObjectURL(objectUrl),5000);
+  }catch(error){
+    alert(document.documentElement.lang==='en'?'Unable to create the PDF. Please try again.':'تعذر إنشاء ملف PDF. حاول مرة أخرى.');
+  }finally{
+    if(button){button.disabled=false;button.textContent=original;}
+    window.hideGlobalLoading?.();
+    document.documentElement.classList.remove('is-global-loading');
+    // Browsers may keep focus in the download UI; repeat cleanup defensively.
+    requestAnimationFrame(()=>window.hideGlobalLoading?.());
+    setTimeout(()=>window.hideGlobalLoading?.(),150);
+    setTimeout(()=>window.hideGlobalLoading?.(),900);
+  }
+}
+document.getElementById('pdfOptionsModal')?.addEventListener('click',event=>{if(event.target.id==='pdfOptionsModal')closePdfOptions();});
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closePdfOptions();});
+</script>
+{% endblock %}

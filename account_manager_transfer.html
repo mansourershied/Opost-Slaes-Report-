@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Optimus | Account Manager Transfer{% endblock %}
+{% block content %}
+<section class="hero-row transfer-hero">
+  <div>
+    <span class="eyebrow" data-i18n="manager_transfer_eyebrow">إدارة حسابات OPOST</span>
+    <h1 data-i18n="manager_transfer_title">تحويل مدير الحساب</h1>
+    <p data-i18n="manager_transfer_subtitle">اختر الفترة والمدير الحالي والمدير الجديد، ثم اعرض الحسابات وحوّل المحدد منها داخل OPOST.</p>
+  </div>
+</section>
+
+<section class="panel transfer-filter-panel transfer-clean-panel">
+  <form id="managerTransferSearchForm" class="transfer-filter-form transfer-filter-premium" data-no-global-loading="1">
+    <div class="field full transfer-period-field">
+      <label data-i18n="report_period">فترة الحسابات</label>
+      <button type="button" id="transferRangeTrigger" class="range-trigger" data-no-global-loading>
+        <span class="calendar-icon">▦</span>
+        <span><small data-i18n="choose_start_end">اختر يوم البداية ثم يوم النهاية</small><strong id="transferRangeLabel"><span data-i18n="no_period_selected">لم يتم اختيار فترة</span></strong></span><b>⌄</b>
+      </button>
+      <input type="hidden" name="start_date" id="transferStartDate" value="">
+      <input type="hidden" name="end_date" id="transferEndDate" value="">
+    </div>
+
+    <div class="transfer-source-step">
+      <label class="manager-select-card manager-select-card-single">
+        <span data-i18n="source_manager_select">المدير الحالي</span>
+        <div class="manager-combobox" data-manager-combobox="source">
+          <input type="text" id="sourceManagerSearch" class="manager-combobox-input" autocomplete="off" data-i18n-placeholder="choose_current_manager" placeholder="اختر أو ابحث عن المدير الحالي" disabled>
+          <button type="button" class="manager-combobox-toggle" aria-label="فتح القائمة">⌄</button>
+          <div class="manager-combobox-menu hidden" id="sourceManagerMenu"></div>
+          <select name="source_manager_id" id="sourceManagerSelect" required hidden disabled><option value=""></option></select>
+        </div>
+      </label>
+    </div>
+
+    <div class="transfer-actions-row">
+      <span id="managerLoadStatus" class="transfer-inline-status" data-i18n="loading_managers">جارٍ تحميل المدراء...</span>
+      <button type="button" id="refreshManagersButton" class="secondary-button compact" data-no-global-loading data-i18n="refresh_list">تحديث القائمة</button>
+      <button class="primary-button compact transfer-search-button" type="submit" data-i18n="load_accounts">عرض الحسابات</button>
+    </div>
+  </form>
+</section>
+
+<div id="transferCalendarModal" class="calendar-modal hidden">
+  <div class="calendar-panel" role="dialog" aria-modal="true" aria-labelledby="transferCalendarMonth">
+    <div class="calendar-ambient calendar-ambient-one"></div><div class="calendar-ambient calendar-ambient-two"></div>
+    <div class="calendar-head">
+      <button type="button" id="transferPrevMonth" class="calendar-nav" data-no-global-loading>‹</button>
+      <div class="calendar-title-wrap"><span class="calendar-kicker" data-i18n="choose_report_period">اختر الفترة</span><strong id="transferCalendarMonth"></strong></div>
+      <button type="button" id="transferNextMonth" class="calendar-nav" data-no-global-loading>›</button>
+    </div>
+    <div class="calendar-selection-preview">
+      <div><small data-i18n="period_start">البداية</small><strong id="transferStartPreview">—</strong></div><span class="selection-arrow">⟷</span><div><small data-i18n="period_end">النهاية</small><strong id="transferEndPreview">—</strong></div>
+    </div>
+    <div class="weekdays"><span>أحد</span><span>إثنين</span><span>ثلاثاء</span><span>أربعاء</span><span>خميس</span><span>جمعة</span><span>سبت</span></div>
+    <div id="transferCalendarGrid" class="calendar-grid"></div>
+    <div class="calendar-foot"><small id="transferCalendarHint" data-i18n="choose_start_end">اختر يوم البداية ثم يوم النهاية</small><div class="calendar-actions"><button type="button" class="secondary-button" id="transferClearRange" data-no-global-loading data-i18n="clear_period">مسح الفترة</button><button type="button" class="primary-button compact" id="transferApplyRange" data-no-global-loading data-i18n="apply_period">اعتماد الفترة</button></div></div>
+  </div>
+</div>
+
+<section class="panel transfer-results-panel" id="transferResultsPanel">
+  <div class="section-heading">
+    <div><span class="eyebrow" data-i18n="matching_accounts">الحسابات المطابقة</span><h2 id="transferResultsTitle" data-i18n="search_to_show_accounts">اضغط عرض الحسابات لبدء البحث</h2></div>
+    <label class="select-all-transfer hidden" id="selectAllTransferWrap"><input id="selectAllTransfer" type="checkbox"><span data-i18n="select_all">تحديد الكل</span></label>
+  </div>
+  <div id="transferSearchState" class="transfer-search-state"></div>
+  <form method="post" id="transferForm" data-no-global-loading class="hidden" data-no-global-loading="1">
+    <input type="hidden" name="action" value="transfer"><input type="hidden" name="start_date" id="postStartDate"><input type="hidden" name="end_date" id="postEndDate"><input type="hidden" name="source_manager_id" id="postSourceManager"><input type="hidden" name="target_manager_id" id="postTargetManager"><input type="hidden" name="selected_accounts_json" id="postSelectedAccounts" value="[]">
+    <div class="transfer-selection-tools" id="transferSelectionTools">
+      <label class="transfer-local-search">
+        <span data-i18n="search_in_accounts">بحث داخل الحسابات</span>
+        <input type="search" id="transferLocalSearch" autocomplete="off" data-i18n-placeholder="search_accounts_placeholder" placeholder="ابحث بالاسم أو الرقم أو المكتب أو المدير">
+      </label>
+      <div class="transfer-selection-count" aria-live="polite">
+        <span data-i18n="selected_accounts">الحسابات المحددة</span>
+        <strong id="transferSelectedCount">0</strong>
+      </div>
+    </div>
+    <div class="transfer-table-wrap"><table class="transfer-table"><thead><tr><th></th><th data-i18n="business_id">رقم الحساب</th><th data-i18n="business_name">اسم الحساب</th><th data-i18n="created_at">تاريخ الإنشاء</th><th data-i18n="office">المكتب</th><th data-i18n="account_manager">مدير الحساب</th></tr></thead><tbody id="transferResultsBody"></tbody></table></div>
+    <div class="transfer-target-step hidden" id="transferTargetStep">
+      <div class="transfer-target-heading"><span class="eyebrow" data-i18n="choose_transfer_destination">اختر المدير الذي تريد التحويل إليه</span></div>
+      <label class="manager-select-card manager-select-card-single">
+        <span data-i18n="target_manager_select">المدير الجديد</span>
+        <div class="manager-combobox" data-manager-combobox="target">
+          <input type="text" id="targetManagerSearch" class="manager-combobox-input" autocomplete="off" data-i18n-placeholder="choose_new_manager" placeholder="اختر أو ابحث عن المدير الجديد" disabled>
+          <button type="button" class="manager-combobox-toggle" aria-label="فتح القائمة">⌄</button>
+          <div class="manager-combobox-menu hidden" id="targetManagerMenu"></div>
+          <select name="target_manager_id" id="targetManagerSelect" required hidden disabled><option value=""></option></select>
+        </div>
+      </label>
+    </div>
+    <button type="button" class="primary-button wide transfer-submit" id="openTransferConfirm" data-i18n="transfer_selected">تحويل الحسابات المحددة</button>
+  </form>
+</section>
+
+{% if transfer_result %}
+<section class="panel transfer-summary-panel">
+  <div class="section-heading"><h2 data-i18n="transfer_summary">نتيجة التحويل داخل OPOST</h2></div>
+  <div class="transfer-summary-grid">
+    <article class="transfer-summary-success transfer-summary-toggle" data-target="transferSuccessDetails" role="button" tabindex="0"><strong>{{ transfer_result.success|length }}</strong><span data-i18n="successful_transfers">تم تحويلها</span></article>
+    <article class="transfer-summary-failed transfer-summary-toggle" data-target="transferFailedDetails" role="button" tabindex="0"><strong>{{ transfer_result.failed|length }}</strong><span data-i18n="failed_transfers">تعذر تحويلها</span></article>
+  </div>
+  <div id="transferSuccessDetails" class="transfer-result-details hidden">
+    <h3>الحسابات التي تم تحويلها</h3>
+    {% if transfer_result.success %}{% for item in transfer_result.success %}<article><b>#{{ item.id }}</b><div><strong>{{ item.name or '—' }}</strong><small>{{ item.office or '—' }}{% if item.created_at %} · {{ item.created_at }}{% endif %}</small></div><span>✓ تم التحويل</span></article>{% endfor %}{% else %}<div class="empty-state">لا توجد حسابات تم تحويلها في هذه العملية.</div>{% endif %}
+  </div>
+  <div id="transferFailedDetails" class="transfer-result-details hidden">
+    <h3>الحسابات التي تعذر تحويلها</h3>
+    {% if transfer_result.failed %}{% for item in transfer_result.failed %}<article class="is-failed"><b>#{{ item.id }}</b><div><strong>{{ item.name or '—' }}</strong><small>{{ item.office or '—' }}{% if item.created_at %} · {{ item.created_at }}{% endif %}</small></div><span>{{ item.message }}</span></article>{% endfor %}{% else %}<div class="empty-state">لا توجد أخطاء في هذه العملية.</div>{% endif %}
+  </div>
+</section>
+{% endif %}
+
+<div class="confirm-modal hidden" id="transferConfirmModal" aria-hidden="true"><div class="confirm-card"><span class="eyebrow" data-i18n="final_confirmation">تأكيد نهائي</span><h3 data-i18n="confirm_transfer_title_dynamic">هل أنت متأكد من تغيير مدير الحسابات داخل OPOST؟</h3><p><span data-i18n="from_manager">من</span>: <strong id="confirmSourceManager">—</strong><br><span data-i18n="to_manager">إلى</span>: <strong id="confirmTargetManager">—</strong></p><div class="confirm-actions"><button type="button" class="secondary-button" id="cancelTransferConfirm" data-i18n="cancel">إلغاء</button><button type="button" class="primary-button" id="confirmTransferNow" data-i18n="confirm_transfer">نعم، حوّل الآن</button></div></div></div>
+{% endblock %}
+{% block scripts %}<script>window.initTransferManagerPage&&window.initTransferManagerPage();</script>{% endblock %}

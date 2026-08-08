@@ -1,0 +1,30 @@
+{% extends 'base.html' %}{% block title %}مستخدمو الموقع | Optimus{% endblock %}{% block content %}
+<div class="hero-row"><div><span class="eyebrow" data-i18n="user_management_access">إدارة المستخدمين</span><h1 data-i18n="users">مستخدمو الموقع</h1><p data-i18n="users_permission_page">هذه الصفحة متاحة للمدير أو للمستخدم الذي مُنح صلاحية إدارة المستخدمين.</p></div></div>
+<div class="user-summary-grid">
+  <article class="analytics-stat"><span>●</span><div><small data-i18n="active_users">المستخدمون النشطون</small><strong>{{ active_users }}</strong></div></article>
+  <article class="analytics-stat"><span>♟</span><div><small data-i18n="total_site_users">إجمالي مستخدمي الموقع</small><strong>{{ total_users }}</strong></div></article>
+</div>
+<div class="two-column">
+<form class="panel-card" method="post" autocomplete="off"><h2 data-i18n="add_user">إضافة مستخدم</h2><label><span data-i18n="full_name">الاسم الكامل</span><input name="full_name" required placeholder="مثال: أحمد محمد" data-i18n-placeholder="full_name_example" autocomplete="off"></label><label><span data-i18n="email">البريد الإلكتروني</span><input type="email" name="email" required placeholder="example@company.com" data-i18n-placeholder="email_example" autocomplete="off"></label><label><span data-i18n="password">كلمة المرور</span><div class="password-wrap"><input type="password" name="password" minlength="6" required placeholder="أنشئ كلمة مرور جديدة" data-i18n-placeholder="new_password" autocomplete="new-password"><button type="button" class="password-toggle" aria-label="إظهار كلمة المرور">◉</button></div></label><label><span data-i18n="role">الصلاحية</span><select name="role"><option value="employee" data-i18n="employee_role">موظف</option><option value="admin" data-i18n="admin_role">مدير</option></select></label><label class="permission-check"><input type="checkbox" name="can_manage_identities" value="1"><span data-i18n="allow_identity_management">السماح بإدارة هويات الحسابات</span></label><label class="permission-check"><input type="checkbox" name="can_transfer_account_managers" value="1"><span data-i18n="allow_account_manager_transfer">السماح بتحويل مدير الحساب</span></label><label class="permission-check"><input type="checkbox" name="can_view_analytics" value="1"><span data-i18n="allow_analytics_access">السماح بالوصول إلى الإحصائيات</span></label><label class="permission-check"><input type="checkbox" name="can_manage_users" value="1"><span data-i18n="allow_user_management">السماح بإدارة مستخدمي الموقع</span></label><button class="primary-button wide" data-i18n="add_user">إضافة المستخدم</button></form>
+<div class="panel-card"><h2 data-i18n="accounts">الحسابات</h2><p class="security-note" data-i18n="password_security_note">لأسباب أمنية لا يمكن عرض كلمة المرور القديمة لأنها محفوظة مشفّرة. يستطيع المدير تعيين كلمة مرور جديدة وإظهارها أثناء الكتابة.</p><div class="user-list">
+{% for employee in employees %}
+<form class="user-row" method="post" action="{{ url_for('edit_employee', employee_id=employee['id']) }}">
+<span class="avatar">{{employee['full_name'][0]}}</span>
+<div style="flex:1;display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:8px">
+<input name="full_name" value="{{ employee['full_name'] }}" required aria-label="الاسم">
+<input type="email" name="email" value="{{ employee['email'] }}" required aria-label="البريد">
+<select name="role" aria-label="الصلاحية"><option value="employee" {% if employee['role']=='employee' %}selected{% endif %} data-i18n="employee_role">موظف</option><option value="admin" {% if employee['role']=='admin' %}selected{% endif %} data-i18n="admin_role">مدير</option></select>
+<select name="active" aria-label="الحالة"><option value="1" {% if employee['active'] %}selected{% endif %} data-i18n="active_status">فعال</option><option value="0" {% if not employee['active'] %}selected{% endif %} data-i18n="inactive_status">موقوف</option></select><label class="permission-check user-permission"><input type="checkbox" name="can_manage_identities" value="1" {% if employee['can_manage_identities'] %}checked{% endif %}><span data-i18n="manage_identities">إدارة الهويات</span></label><label class="permission-check user-permission"><input type="checkbox" name="can_transfer_account_managers" value="1" {% if employee['can_transfer_account_managers'] %}checked{% endif %}><span data-i18n="manage_account_manager_transfer">تحويل مدير الحساب</span></label><label class="permission-check user-permission"><input type="checkbox" name="can_view_analytics" value="1" {% if employee['can_view_analytics'] %}checked{% endif %}><span data-i18n="analytics_access">الوصول إلى الإحصائيات</span></label><label class="permission-check user-permission"><input type="checkbox" name="can_manage_users" value="1" {% if employee['can_manage_users'] %}checked{% endif %}><span data-i18n="manage_users_permission">إدارة مستخدمي الموقع</span></label>
+<div class="password-wrap" style="grid-column:1/-1"><input type="password" name="password" minlength="6" placeholder="كلمة مرور جديدة (اختياري)" data-i18n-placeholder="optional_new_password" autocomplete="new-password"><button type="button" class="password-toggle" aria-label="إظهار كلمة المرور">◉</button></div>
+</div>
+<div class="user-row-actions">
+<button class="secondary-button" type="submit" data-i18n="save">حفظ</button>
+{% if employee['id'] != session.get('employee_id') and employee['email'] != 'Mansour_E@gmail.com' %}
+<button class="danger-button delete-user-button" type="submit" formaction="{{ url_for('delete_employee', employee_id=employee['id']) }}" formmethod="post" data-i18n="delete_user">حذف</button>
+{% endif %}
+</div>
+</form>
+{% endfor %}
+</div></div>
+</div>
+{% endblock %}

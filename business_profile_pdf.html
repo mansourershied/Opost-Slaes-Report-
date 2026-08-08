@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="{{ language }}" dir="{{ 'rtl' if language == 'ar' else 'ltr' }}">
+<head>
+<meta charset="utf-8">
+<style>
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{width:210mm;min-height:297mm}
+body{margin:0;font-family:Arial,"Segoe UI",Tahoma,sans-serif;color:{{ '#fff' if theme=='site' else '#243046' }};background:{{ '#100719' if theme=='site' else '#eef3f8' }};font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet{position:relative;width:210mm;height:297mm;padding:10mm;overflow:hidden;background:{{ 'radial-gradient(circle at 13% 8%,rgba(126,45,208,.34),transparent 30%),radial-gradient(circle at 88% 92%,rgba(255,211,61,.13),transparent 26%),linear-gradient(145deg,#100719 0%,#1d0d2b 52%,#100719 100%)' if theme=='site' else 'radial-gradient(circle at 12% 5%,rgba(126,111,255,.15),transparent 29%),radial-gradient(circle at 88% 94%,rgba(82,184,159,.13),transparent 27%),linear-gradient(145deg,#f8fbff 0%,#edf3f8 55%,#f7f4fb 100%)' }}}
+.sheet:before,.sheet:after{content:"";position:absolute;border-radius:50%;pointer-events:none;filter:blur(1px)}
+.sheet:before{width:95mm;height:95mm;top:-49mm;{{ 'left' if language=='ar' else 'right' }}:-35mm;border:1px solid {{ 'rgba(255,211,61,.14)' if theme=='site' else 'rgba(93,117,157,.12)' }}}
+.sheet:after{width:78mm;height:78mm;bottom:-40mm;{{ 'right' if language=='ar' else 'left' }}:-27mm;border:1px solid {{ 'rgba(158,84,239,.18)' if theme=='site' else 'rgba(121,93,166,.11)' }}}
+.content{position:relative;z-index:1}
+.cover{padding:18px 20px;border-radius:20px;background:{{ 'linear-gradient(135deg,rgba(58,24,86,.98),rgba(27,12,42,.96))' if theme=='site' else 'linear-gradient(135deg,rgba(255,255,255,.98),rgba(236,243,250,.96))' }};border:1px solid {{ '#55306d' if theme=='site' else '#d5e0ea' }};box-shadow:0 12px 34px {{ 'rgba(0,0,0,.18)' if theme=='site' else 'rgba(60,78,105,.09)' }};margin-bottom:11px}
+.cover h1{font-size:25px;margin:5px 0}.eyebrow{font-size:9px;font-weight:800;letter-spacing:2px;color:{{ '#ffd43d' if theme=='site' else '#657b9a' }}}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:11px}
+.kpi,.block,.extra-item{background:{{ 'rgba(33,18,50,.96)' if theme=='site' else 'rgba(255,255,255,.94)' }};border:1px solid {{ '#4d315f' if theme=='site' else '#d8e1ea' }};border-radius:14px;padding:12px;break-inside:avoid;box-shadow:0 8px 24px {{ 'rgba(0,0,0,.12)' if theme=='site' else 'rgba(74,91,117,.06)' }}}
+.kpi span,.row dt,.extra-item span{color:{{ '#cbb9d8' if theme=='site' else '#627087' }}}
+.kpi strong{display:block;font-size:20px;color:{{ '#ffd43d' if theme=='site' else '#526f91' }};margin-top:6px}
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px}.block h2{font-size:15px;color:{{ '#ffd43d' if theme=='site' else '#536f91' }};margin:0 0 10px}.details{margin:0}
+.row{display:grid;grid-template-columns:45% 55%;gap:8px;padding:7px 0;border-bottom:1px solid {{ '#3d284c' if theme=='site' else '#e6edf3' }}}.row:last-child{border-bottom:0}.row dt,.row dd{margin:0}.row dd{font-weight:700;overflow-wrap:anywhere}
+.extras{display:grid;grid-template-columns:1fr 1fr;gap:8px}.extra-item strong{display:block;margin-top:5px;overflow-wrap:anywhere}
+.fees-table{width:100%;border-collapse:collapse;font-size:9px}.fees-table th,.fees-table td{padding:5px 7px;border-bottom:1px solid {{ '#3d284c' if theme=='site' else '#e6edf3' }};text-align:{{ 'right' if language=='ar' else 'left' }}}.fees-table th{color:{{ '#ffd43d' if theme=='site' else '#536f91' }};font-weight:800}.fees-table tr:last-child td{border-bottom:0}.fees-note{font-size:8px;color:{{ '#bba8c8' if theme=='site' else '#68778a' }};margin-top:5px}.footer{display:flex;justify-content:{{ 'flex-start' if language=='ar' else 'flex-end' }};align-items:center;margin-top:10px;padding:8px 11px;border-radius:10px;background:{{ 'rgba(255,255,255,.035)' if theme=='site' else 'rgba(255,255,255,.72)' }};color:{{ '#bba8c8' if theme=='site' else '#68778a' }};font-size:9px}
+.identity-page{page-break-before:always;position:relative;margin:0;width:210mm;height:297mm;padding:10mm;overflow:hidden;background:{{ 'radial-gradient(circle at 15% 8%,rgba(126,45,208,.32),transparent 30%),linear-gradient(145deg,#100719,#1c0d2a 58%,#100719)' if theme=='site' else 'radial-gradient(circle at 14% 8%,rgba(126,111,255,.14),transparent 29%),linear-gradient(145deg,#f8fbff,#edf3f8 60%,#f7f4fb)' }};display:flex;flex-direction:column;align-items:center;justify-content:center}
+.identity-page h2{font-size:22px;color:{{ '#ffd43d' if theme=='site' else '#6e1fab' }};margin:0 0 12px}.identity-frame{width:100%;height:auto;padding:0;border:0;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;box-shadow:none}
+.identity-page img{display:block;max-width:180mm;max-height:235mm;object-fit:contain;border-radius:8px}
+@media print{.block,.kpi,.extra-item,.columns{break-inside:avoid}}
+</style>
+</head>
+<body>
+{% set ar = language == 'ar' %}
+{% set labels = {
+'business_profile': 'ملف حساب OPOST' if ar else 'OPOST BUSINESS PROFILE',
+'business_id': 'رقم الحساب' if ar else 'Business ID',
+'shipments': 'الشحنات' if ar else 'Shipments',
+'closed_pct': 'نسبة Closed' if ar else 'Closed %',
+'delivered': 'المسلّمة/الراجعة' if ar else 'Delivered',
+'returned_pct': 'نسبة الرواجع' if ar else 'Returned %',
+'account_data': 'بيانات الحساب' if ar else 'Account details',
+'performance': 'أداء الشحنات' if ar else 'Shipment performance',
+'name': 'اسم الحساب' if ar else 'Business name',
+'phone': 'رقم الهاتف' if ar else 'Phone',
+'created': 'تاريخ الإنشاء' if ar else 'Created at',
+'age': 'عمر الحساب' if ar else 'Account age',
+'incubation': 'حالة الحضانة' if ar else 'Incubation status',
+'manager': 'مدير الحساب' if ar else 'Account manager',
+'office': 'المكتب' if ar else 'Office',
+'total': 'إجمالي الشحنات' if ar else 'Total shipments',
+'closed': 'المغلقة' if ar else 'Closed',
+'returned': 'الرواجع' if ar else 'Returned',
+'cancelled': 'الملغاة' if ar else 'Cancelled',
+'draft': 'Draft - مسودة طلب' if ar else 'Draft - pending draft',
+'submitted': 'Submitted - جاهز لاستلام الشوفير' if ar else 'Submitted - ready for driver pickup',
+'other': 'حالات أخرى' if ar else 'Other statuses',
+'delivered_pct': 'نسبة Delivered' if ar else 'Delivered %',
+'extra': 'تفاصيل إضافية من OPOST' if ar else 'Additional OPOST details',
+'generated': 'تم إنشاء الملف في' if ar else 'Generated at',
+'identity': 'صورة هوية مالك الحساب' if ar else 'Business owner identity image',
+'cod': 'COD - مسلّم ومحصل' if ar else 'COD - delivered & collected',
+'exchange_r': 'R - تبديل' if ar else 'R - exchange',
+'delivered_closed': 'Delivered - راجع ومغلق' if ar else 'Delivered - closed return',
+'closed_breakdown': 'تفصيل الشحنات المغلقة' if ar else 'Closed shipment breakdown',
+'fees': 'تفاصيل الرسوم حسب المدن' if ar else 'Fees by city',
+'fee_city': 'المدينة / المنطقة' if ar else 'City / area',
+'delivery_fee': 'رسوم التوصيل' if ar else 'Delivery fee',
+'cancel_fee': 'رسوم الإلغاء' if ar else 'Cancel fee',
+'rest_cities': 'باقي المدن' if ar else 'Rest of cities',
+'cod_pct': 'نسبة التسليم الناجح COD' if ar else 'COD success %'
+} %}
+{% set field_labels = {
+'extra_email': 'البريد الإلكتروني' if ar else 'Email',
+'extra_short_name': 'الاسم المختصر' if ar else 'Short name',
+'extra_business_line': 'مجال العمل' if ar else 'Business line',
+'extra_price_plan': 'خطة الأسعار' if ar else 'Price plan',
+'extra_address': 'العنوان' if ar else 'Address',
+'extra_city': 'المدينة' if ar else 'City',
+'extra_region': 'المنطقة' if ar else 'Region',
+'extra_mobile': 'رقم الجوال' if ar else 'Mobile',
+'extra_website': 'الموقع الإلكتروني' if ar else 'Website',
+'extra_tax_number': 'الرقم الضريبي' if ar else 'Tax number',
+'extra_company_name': 'اسم الشركة' if ar else 'Company name'
+} %}
+<div class="sheet"><div class="content">
+  <section class="cover"><span class="eyebrow">{{ labels.business_profile }}</span><h1>{{ profile.row['Business Name'] }}</h1><div>{{ labels.business_id }}: {{ profile.row['Business ID'] }}</div></section>
+  <section class="kpis">
+    {% for label,key,suffix in [(labels.shipments,'Shipments',''),(labels.closed_pct,'Closed %','%'),(labels.cod,'COD',''),(labels.exchange_r,'R','')] %}<div class="kpi"><span>{{ label }}</span><strong>{{ profile.row.get(key,0) }}{{ suffix }}</strong></div>{% endfor %}
+  </section>
+  <section class="columns">
+    <div class="block"><h2>{{ labels.account_data }}</h2><dl class="details">
+      {% for label,key in [(labels.business_id,'Business ID'),(labels.name,'Business Name'),(labels.phone,'Phone'),(labels.created,'Created At'),(labels.age,'Account Age'),(labels.incubation,'Incubation'),(labels.manager,'Account Manager'),(labels.office,'Office')] %}<div class="row"><dt>{{ label }}</dt><dd>{{ profile.row.get(key,'—') or '—' }}</dd></div>{% endfor %}
+    </dl></div>
+    <div class="block"><h2>{{ labels.performance }}</h2><dl class="details">
+      {% for label,key,suffix in [(labels.total,'Shipments',''),(labels.closed,'Closed',''),(labels.cod,'COD',''),(labels.delivered_closed,'Delivered',''),(labels.exchange_r,'R',''),(labels.returned,'Returned',''),(labels.cancelled,'Cancelled',''),(labels.draft,'Draft',''),(labels.submitted,'Submitted',''),(labels.other,'Other Status',''),(labels.closed_pct,'Closed %','%'),(labels.cod_pct,'Successful Delivery %','%')] %}<div class="row"><dt>{{ label }}</dt><dd>{{ profile.row.get(key,0) }}{{ suffix }}</dd></div>{% endfor %}
+    </dl></div>
+  </section>
+  {% if profile.fields %}<section class="block"><h2>{{ labels.extra }}</h2><div class="extras">{% for field in profile.fields %}<div class="extra-item"><span>{{ field_labels.get(field.translation_key, field.label) }}</span><strong>{{ field.value }}</strong></div>{% endfor %}</div></section>{% endif %}
+  {% if profile.fees %}<section class="block" style="margin-top:11px;padding:10px 12px"><h2 style="margin-bottom:6px">{{ labels.fees }}</h2><table class="fees-table"><thead><tr><th>{{ labels.fee_city }}</th><th>{{ labels.delivery_fee }}</th><th>{{ labels.cancel_fee }}</th><th>{{ labels.rest_cities }}</th></tr></thead><tbody>{% for fee in profile.fees %}<tr><td>{{ fee.city }}</td><td>{{ fee.fee }}</td><td>{{ fee.cancel_fee }}</td><td>{{ fee.rest_of_cities or '—' }}</td></tr>{% endfor %}</tbody></table></section>{% endif %}
+  <div class="footer">{{ labels.generated }} {{ profile.generated_at }}</div>
+</div></div>
+{% if identity_data_uri %}<section class="identity-page"><h2>{{ labels.identity }}</h2><div class="identity-frame"><img src="{{ identity_data_uri }}" alt="Identity"></div></section>{% endif %}
+</body></html>

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}إنشاء تقرير | Optimus{% endblock %}
+{% block content %}
+<div class="hero-row report-hero"><div><span class="eyebrow" data-i18n="report_center">مركز التقارير</span><h1 data-i18n="create_report">إنشاء تقارير</h1><p><span data-i18n="report_intro">اختر فترة متصلة، ثم ابدأ التقرير وتابع استخدام الموقع بشكل طبيعي.</span></p></div></div>
+
+<form class="report-card" method="post" id="reportForm">
+  <div class="field full"><label data-i18n="report_period">فترة التقرير</label><button type="button" id="rangeTrigger" class="range-trigger" data-no-global-loading><span class="calendar-icon">▦</span><span><small data-i18n="choose_start_end">اختر يوم البداية ثم يوم النهاية</small><strong id="rangeLabel" data-i18n="no_period_selected">لم يتم اختيار فترة</strong></span><b>⌄</b></button><input type="hidden" name="start_date" id="startDate"><input type="hidden" name="end_date" id="endDate"></div>
+  <div class="form-grid report-rules-grid">
+    <label><span data-i18n="minimum_delivery">أقل نسبة تسليم</span><input type="number" name="minimum_delivery" min="0" max="100" value="30"></label>
+    <label><span data-i18n="minimum_shipments">أقل عدد شحنات</span><input type="number" name="minimum_shipments" min="0" value="30"></label>
+  </div>
+  <div class="info-box" data-i18n="stay_on_page">يمكنك التنقل بين صفحات الموقع، وسيستمر إنشاء التقرير في الخلفية.</div>
+  <button class="primary-button wide" type="submit" id="submitReport" data-i18n="create_report">إنشاء التقرير</button>
+</form>
+
+<div id="calendarModal" class="calendar-modal hidden">
+  <div class="calendar-panel" role="dialog" aria-modal="true" aria-labelledby="calendarMonth">
+    <div class="calendar-ambient calendar-ambient-one"></div>
+    <div class="calendar-ambient calendar-ambient-two"></div>
+    <div class="calendar-head">
+      <button type="button" id="prevMonth" class="calendar-nav" data-no-global-loading aria-label="الشهر السابق">‹</button>
+      <div class="calendar-title-wrap"><span class="calendar-kicker" data-i18n="choose_report_period">اختر فترة التقرير</span><strong id="calendarMonth"></strong></div>
+      <button type="button" id="nextMonth" class="calendar-nav" data-no-global-loading aria-label="الشهر التالي">›</button>
+    </div>
+    <div class="calendar-selection-preview">
+      <div><small data-i18n="period_start">البداية</small><strong id="calendarStartPreview">—</strong></div>
+      <span class="selection-arrow">⟷</span>
+      <div><small data-i18n="period_end">النهاية</small><strong id="calendarEndPreview">—</strong></div>
+    </div>
+    <div class="weekdays"><span data-weekday="0">أحد</span><span data-weekday="1">إثنين</span><span data-weekday="2">ثلاثاء</span><span data-weekday="3">أربعاء</span><span data-weekday="4">خميس</span><span data-weekday="5">جمعة</span><span data-weekday="6">سبت</span></div>
+    <div id="calendarGrid" class="calendar-grid"></div>
+    <div class="calendar-foot">
+      <small id="calendarHint">اختر يوم البداية ثم يوم النهاية</small>
+      <div class="calendar-actions"><button type="button" class="secondary-button" id="clearRange" data-no-global-loading data-i18n="clear_period">مسح الفترة</button><button type="button" class="primary-button compact" id="applyRange" data-no-global-loading data-i18n="apply_period">اعتماد الفترة</button></div>
+    </div>
+  </div>
+</div>
+
+<section id="jobPanel" class="job-panel clean-job {% if not selected_job %}hidden{% endif %}" data-job-id="{{ selected_job }}">
+  <div class="clean-job-layout">
+    <div class="wall-clock" id="elapsedClock" aria-hidden="true">
+      <span class="clock-mark mark-12">12</span><span class="clock-mark mark-3">3</span><span class="clock-mark mark-6">6</span><span class="clock-mark mark-9">9</span>
+      <span class="clock-hand minute-hand" id="minuteHand"></span><span class="clock-hand second-hand" id="secondHand"></span><span class="clock-center"></span>
+    </div>
+    <div class="clean-job-copy">
+      <span class="eyebrow" data-i18n="report_in_progress">جاري إنشاء التقرير</span>
+      <h2 id="jobStage" data-i18n="please_wait">يرجى الانتظار</h2>
+      <p data-i18n="stay_on_page_short">يمكنك متابعة استخدام الموقع وسيستمر التقرير في الخلفية.</p>
+      <div class="elapsed-row"><span data-i18n="elapsed_time">الوقت المنقضي</span><strong id="elapsedText">00:00</strong></div>
+      <div class="progress-track"><span id="jobBar"></span></div>
+      <div class="job-controls no-print"><button class="danger-button" id="cancelReport" type="button" data-i18n="stop_report">إيقاف إنشاء التقرير</button></div>
+      <div id="jobResult"></div>
+    </div>
+  </div>
+</section>
+
+<div id="cancelConfirmModal" class="confirm-modal hidden" aria-hidden="true">
+  <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="cancelConfirmTitle">
+    <span class="eyebrow" data-i18n="stop_report">إيقاف إنشاء التقرير</span>
+    <h3 id="cancelConfirmTitle" data-i18n="cancel_confirm_title">هل أنت متأكد من إيقاف التقرير؟</h3>
+    <p data-i18n="cancel_confirm_text">سيتم إيقاف المهمة الحالية فورًا ولن يتم إنشاء الملف.</p>
+    <div class="confirm-actions">
+      <button type="button" class="secondary-button" id="cancelConfirmNo" data-no-global-loading data-i18n="keep_report_running">متابعة التقرير</button>
+      <button type="button" class="danger-button" id="cancelConfirmYes" data-no-global-loading data-i18n="confirm_stop_report">نعم، أوقف التقرير</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>window.initRangeCalendar && window.initRangeCalendar(); window.initReportJob && window.initReportJob();</script>{% endblock %}

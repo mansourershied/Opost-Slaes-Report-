@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+  <script>if(sessionStorage.getItem("optimus_tab_logged_out")==="1"){location.replace("{{ url_for('login') }}");}</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Optimus{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3.0.3">
+</head>
+<body class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('dashboard') }}">
+      <span class="brand-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="Optimus"></span>
+      <span><strong>Optimus</strong><small data-i18n="express_services">لخدمات البريد السريع</small></span>
+    </a>
+    <nav class="nav-list">
+      <span class="nav-section-label" data-i18n="nav_overview">نظرة عامة</span>
+      <a class="nav-item {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><span class="nav-icon">⌂</span><span data-i18n="dashboard">لوحة التحكم</span></a>
+      {% if can_view_analytics %}<a class="nav-item {% if request.endpoint=='analytics' %}active{% endif %}" href="{{ url_for('analytics') }}"><span class="nav-icon">▥</span><span data-i18n="analytics">الإحصائيات</span></a>{% endif %}
+      <span class="nav-section-label" data-i18n="nav_operations">العمليات</span>
+      <a class="nav-item {% if request.endpoint=='monthly_report' %}active{% endif %}" href="{{ url_for('monthly_report') }}"><span class="nav-icon">▣</span><span data-i18n="create_report">إنشاء تقارير</span></a>
+      <a class="nav-item {% if request.endpoint=='business_profile' %}active{% endif %}" href="{{ url_for('business_profile') }}"><span class="nav-icon">⌕</span><span data-i18n="business_profile">ملف الحساب</span></a>
+      {% if can_transfer_account_managers %}<a class="nav-item {% if request.endpoint=='account_manager_transfer' %}active{% endif %}" href="{{ url_for('account_manager_transfer') }}"><span class="nav-icon">⇆</span><span data-i18n="manager_transfer_nav">تحويل مدير الحساب</span></a>{% endif %}
+      {% if can_manage_identities %}<a class="nav-item {% if request.endpoint=='identities' %}active{% endif %}" href="{{ url_for('identities') }}"><span class="nav-icon">▧</span><span data-i18n="identities">هويات الحسابات</span></a>{% endif %}
+      <span class="nav-section-label" data-i18n="nav_files_admin">الملفات والإدارة</span>
+      <a class="nav-item {% if request.endpoint in ['download_center','download_center_file'] %}active{% endif %}" href="{{ url_for('download_center') }}"><span class="nav-icon">⇩</span><span data-i18n="download_center">مركز التنزيلات</span></a>
+      {% if can_manage_users %}<a class="nav-item {% if request.endpoint=='employees' %}active{% endif %}" href="{{ url_for('employees') }}"><span class="nav-icon">♟</span><span data-i18n="users">مستخدمو الموقع</span></a>{% endif %}
+    </nav>
+    <div class="system-glass-card" aria-label="OPOST system status">
+      <div class="system-glass-orb"></div>
+      <div class="system-glass-head">
+        <span class="system-live-dot"></span>
+        <span data-i18n="system_ready">النظام جاهز</span>
+      </div>
+      <strong data-i18n="opost_live_data">بيانات OPOST الأصلية</strong>
+      <small data-i18n="secure_reports">تقارير دقيقة وآمنة</small>
+    </div>
+    <div class="sidebar-session-actions">
+      <a class="sidebar-switch-account" href="{{ url_for('logout') }}" data-tab-logout="1" title="تبديل الحساب">
+        <span class="sidebar-session-icon">⇄</span><span data-i18n="switch_account">تبديل الحساب</span>
+      </a>
+      <a class="logout-link" href="{{ url_for('logout') }}" data-tab-logout="1"><span>↦</span><span data-i18n="logout">تسجيل الخروج</span></a>
+    </div>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar">
+      <div class="account-zone">
+        <div class="user-chip">
+          <span class="avatar">{{ (current_employee['full_name'][0] if current_employee else 'M')|upper }}</span>
+          <span><strong>{{ current_employee['full_name'] if current_employee else '' }}</strong><small data-role="{{ current_employee['role'] if current_employee else '' }}">{{ current_employee['role'] if current_employee else '' }}</small></span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="languageToggle" class="language-button" type="button" aria-label="تغيير اللغة">EN</button>
+        <span class="dark-mode-label" data-i18n="dark_mode">الوضع الداكن</span>
+      </div>
+    </header>
+
+    <section class="page-wrap page-enter">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+          {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+  <div id="globalLoadingOverlay" class="global-loading-overlay" aria-hidden="true" role="status" aria-live="polite">
+    <div class="global-loading-card">
+      <div class="global-loading-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt=""></div>
+      <div class="global-loading-spinner" aria-hidden="true"></div>
+      <strong data-i18n="page_loading">جاري تحميل الصفحة</strong>
+      <small data-i18n="please_wait_loading">يرجى الانتظار</small>
+    </div>
+  </div>
+  <script>document.querySelectorAll('[data-tab-logout="1"]').forEach(a=>a.addEventListener('click',()=>sessionStorage.setItem('optimus_tab_logged_out','1')));</script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=3.0.3"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

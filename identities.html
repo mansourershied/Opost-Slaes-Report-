@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}هويات الحسابات | Optimus{% endblock %}
+{% block content %}
+<div class="hero-row identities-hero"><div><span class="eyebrow" data-i18n="identity_management">إدارة آمنة</span><h1 data-i18n="identities">هويات الحسابات</h1><p data-i18n="identity_page_subtitle">اختر مجلد الهويات مرة واحدة، وسيقرأ النظام جميع الصور داخله مهما كان عددها ويطابقها تلقائيًا مع حسابات OPOST.</p></div></div>
+<section class="panel identity-upload-panel">
+  <div class="identity-upload-form">
+    <form method="post" class="identity-folder-form identity-folder-picker-form" data-global-loading action="{{ url_for('select_identity_folder') }}">
+      <button class="identity-dropzone identity-folder-dropzone identity-folder-picker" type="submit" aria-label="اختيار مجلد الهويات الكامل">
+        <span class="identity-upload-icon">📁</span>
+        <strong data-i18n="choose_identity_folder">اختيار مجلد الهويات الكامل</strong>
+        <small data-i18n="identity_folder_help">اضغط هنا لاختيار المجلد. يدعم مئات أو آلاف الصور والمجلدات الفرعية، وبعد أول مزامنة يعالج النظام الصور الجديدة أو المعدلة فقط.</small>
+        <b>{% if source_folder %}{{ source_folder }}{% else %}<span data-i18n="no_identity_folder">لم يتم اختيار مجلد بعد</span>{% endif %}</b>
+      </button>
+    </form>
+    <div class="identity-folder-primary-actions identity-folder-sync-only">
+      <form method="post" class="identity-sync-form identity-folder-form" data-no-global-loading action="{{ url_for('sync_identity_folder') }}"><button class="primary-button wide" type="submit" data-i18n="sync_identity_folder">مزامنة المجلد الآن</button></form>
+    </div>
+  </div>
+</section>
+{% if identity_sync_status and identity_sync_status.get('status') in ['queued','running'] %}
+<section class="panel" id="identitySyncRunning"><div class="section-heading"><div><span class="eyebrow">OPOST</span><h2 data-i18n="identity_sync_background">مزامنة الهويات تعمل في الخلفية</h2><p data-i18n="identity_sync_background_help">يمكنك التنقل بين الصفحات أو فتح Excel، وستستمر المزامنة حتى تنتهي.</p></div></div></section>
+{% elif identity_sync_status and identity_sync_status.get('status') == 'failed' %}
+<section class="panel"><div class="empty-state">{{ identity_sync_status.get('error') or 'فشلت المزامنة.' }}</div></section>
+{% endif %}
+{% if results %}
+<section class="panel"><div class="section-heading"><div><span class="eyebrow" data-i18n="sync_result">نتيجة المزامنة</span><h2 data-i18n="latest_upload">آخر عملية مزامنة</h2></div></div>
+<div class="identity-result-list">{% for item in results %}<article class="identity-result {{ item.status }}"><span>{{ '✓' if item.status=='success' else ('•' if item.status=='skip' else '!') }}</span><div><strong>{{ item.file }}</strong><small>{{ item.business or '' }}{% if item.business_id %} · {{ item.business_id }}{% endif %}</small></div><b>{{ item.message }}</b></article>{% endfor %}</div></section>
+{% endif %}
+<section class="panel"><div class="section-heading"><div><span class="eyebrow" data-i18n="identity_archive">الأرشيف الآمن</span><h2 data-i18n="linked_identities">الهويات المرتبطة</h2></div><span class="result-count">{{ records|length }}</span></div>
+{% if records %}<div class="identity-gallery">{% for item in records %}<article class="identity-card"><img src="{{ url_for('identity_image', business_id=item['business_id']) }}" alt=""><div><strong>{{ item['business_name'] }}</strong><small>Business ID: {{ item['business_id'] }}</small><small>{{ item['original_filename'] }}</small><small>{{ item['uploaded_by_name'] or '—' }} · {{ item['updated_at'] }}</small></div><a href="{{ url_for('business_profile', business_id=item['business_id'], query=item['business_name']) }}" class="secondary-button" data-i18n="open_profile">فتح الملف</a></article>{% endfor %}</div>{% else %}<div class="empty-state" data-i18n="no_identities_yet">لا توجد هويات مرتبطة حتى الآن.</div>{% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const running = document.getElementById('identitySyncRunning');
+  if (!running) return;
+  let finished = false;
+  const check = async () => {
+    if (finished) return;
+    try {
+      const response = await fetch('/api/identities/sync-status', {cache:'no-store'});
+      const data = await response.json();
+      if (data.status === 'completed' || data.status === 'failed') {
+        finished = true;
+        window.location.reload();
+        return;
+      }
+    } catch (_) {}
+    window.setTimeout(check, 1500);
+  };
+  window.setTimeout(check, 1000);
+})();
+</script>
+{% endblock %}

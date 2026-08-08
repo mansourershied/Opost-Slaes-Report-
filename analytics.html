@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}Analytics | Optimus{% endblock %}
+{% block content %}
+<div class="hero-row analytics-hero">
+  <div>
+    <span class="eyebrow" data-i18n="analytics_overview">إحصائيات OPOST المباشرة</span>
+    <h1 data-i18n="analytics">الإحصائيات</h1>
+    <p data-i18n="analytics_live_subtitle">تظهر البيانات المحفوظة فورًا، ويجري تحديثها تلقائيًا من OPOST في الخلفية دون تعطيل الصفحة.</p>
+  </div>
+  <div class="analytics-actions">
+    <button id="refreshAnalytics" class="secondary-button" type="button"><span>↻</span><span data-i18n="refresh_data">تحديث البيانات</span></button>
+    <a class="primary-button" href="{{ url_for('analytics_export') }}"><span>⇩</span><span data-i18n="export_full_analytics">تنزيل التقرير الكامل</span></a>
+  </div>
+</div>
+
+<div class="analytics-period live-status-row" data-updated-at="{{ stats.updated_at }}">
+  <div><span class="live-pulse {% if stats.refreshing %}syncing{% endif %}"></span><span data-i18n="live_opost_data">بيانات OPOST المباشرة</span></div>
+  <strong>{{ stats.updated_at|replace('T',' ') or '—' }}</strong>
+  <small>{% if stats.refreshing %}<span data-i18n="updating_background">يتم التحديث في الخلفية…</span>{% else %}<span data-i18n="auto_refresh_note_1m">تتحدث تلقائيًا كل دقيقة</span>{% endif %}</small>
+</div>
+
+<div class="analytics-card-grid">
+{% set cards=[
+('total_accounts','إجمالي الحسابات',stats.total_accounts,'◆'),
+('incubation_accounts','ضمن الحضانة',stats.incubation_accounts,'◷'),
+('account_managers_count','مدراء الحسابات',stats.manager_count,'♟'),
+('offices_count','المكاتب',stats.office_count,'⌂'),
+('linked_identities','الهويات المرتبطة',stats.identity_count,'▧'),
+('missing_identities','بدون هوية',stats.missing_identities,'□'),
+('completed_reports','تقارير مكتملة',stats.completed_reports,'✓')
+] %}
+{% for key,label,value,icon in cards %}
+<article class="analytics-stat{% if key in ['account_managers_count','offices_count'] %} analytics-stat-clickable{% endif %}"{% if key == 'account_managers_count' %} data-catalog="managers" role="button" tabindex="0"{% elif key == 'offices_count' %} data-catalog="offices" role="button" tabindex="0"{% endif %}>
+  <span>{{icon}}</span><div><small data-i18n="{{key}}">{{label}}</small><strong>{{value}}</strong>{% if key in ['account_managers_count','offices_count'] %}<em data-i18n="analytics_catalog_hint">اضغط لعرض القائمة الأصلية من OPOST</em>{% endif %}</div>
+</article>
+{% endfor %}
+</div>
+
+<div class="analytics-panels analytics-panels-wide">
+  <section class="analytics-panel">
+    <div class="panel-title"><div><span class="eyebrow" data-i18n="manager_distribution">توزيع المدراء</span><h2 data-i18n="accounts_by_manager">الحسابات حسب مدير الحساب</h2></div><strong>{{ stats.manager_count }}</strong></div>
+    <div class="analytics-ranked-list">
+    {% for row in stats.managers[:12] %}
+      <div><span class="rank-number">{{ loop.index }}</span><span class="rank-label">{{ row.name }}</span><strong>{{ row.count }}</strong><div class="metric-track"><i style="width:{{ (row.count*100/(stats.total_accounts or 1))|round(1) }}%"></i></div></div>
+    {% else %}<div class="empty-state" data-i18n="no_data_yet">لا توجد بيانات حتى الآن.</div>{% endfor %}
+    </div>
+  </section>
+
+  <section class="analytics-panel">
+    <div class="panel-title"><div><span class="eyebrow" data-i18n="office_distribution">توزيع المكاتب</span><h2 data-i18n="accounts_by_office">الحسابات حسب المكتب</h2></div><strong>{{ stats.office_count }}</strong></div>
+    <div class="analytics-ranked-list">
+    {% for row in stats.offices[:12] %}
+      <div><span class="rank-number">{{ loop.index }}</span><span class="rank-label">{{ row.name }}</span><strong>{{ row.count }}</strong><div class="metric-track"><i style="width:{{ (row.count*100/(stats.total_accounts or 1))|round(1) }}%"></i></div></div>
+    {% else %}<div class="empty-state" data-i18n="no_data_yet">لا توجد بيانات حتى الآن.</div>{% endfor %}
+    </div>
+  </section>
+</div>
+
+<div class="analytics-panels analytics-bottom-grid">
+  <section class="analytics-panel">
+    <div class="panel-title"><div><span class="eyebrow" data-i18n="monthly_growth">النمو الشهري</span><h2 data-i18n="new_accounts_by_month">الحسابات الجديدة حسب الشهر</h2></div></div>
+    <div class="monthly-bars">
+    {% set max_month=(stats.months|map(attribute='count')|max) if stats.months else 1 %}
+    {% for row in stats.months[-12:] %}<div class="month-bar"><strong>{{row.count}}</strong><i style="height:{{ [12,(row.count*100/(max_month or 1))]|max }}%"></i><small>{{row.month}}</small></div>{% else %}<div class="empty-state" data-i18n="no_data_yet">لا توجد بيانات حتى الآن.</div>{% endfor %}
+    </div>
+  </section>
+
+  <section class="analytics-panel">
+    <div class="panel-title"><div><span class="eyebrow" data-i18n="shipment_report_summary">ملخص أداء الشحنات</span><h2 data-i18n="latest_completed_report">آخر تقرير مكتمل</h2></div></div>
+    {% if stats.report_updated_at %}
+    <div class="report-summary-grid">
+      <div><small data-i18n="with_shipments">حسابات أخرجت طرود</small><strong>{{stats.with_shipments}}</strong></div>
+      <div><small data-i18n="without_shipments">بدون شحنات</small><strong>{{stats.without_shipments}}</strong></div>
+      <div><small data-i18n="best_accounts">أفضل الحسابات</small><strong>{{stats.best}}</strong></div>
+      <div><small data-i18n="need_follow_up">تحتاج متابعة</small><strong>{{stats.follow_up}}</strong></div>
+    </div>
+    <p class="analytics-note"><span data-i18n="report_period">فترة التقرير</span>: {{stats.report_period_start}} ← {{stats.report_period_end}} · {{stats.report_updated_at}}</p>
+    {% else %}<div class="empty-state" data-i18n="no_completed_reports">لا توجد تقارير مكتملة حتى الآن.</div>{% endif %}
+  </section>
+</div>
+
+<div class="analytics-catalog-modal" id="analyticsCatalogModal" aria-hidden="true">
+  <div class="analytics-catalog-dialog" role="dialog" aria-modal="true">
+    <div class="analytics-catalog-head"><div><span class="eyebrow" id="analyticsCatalogSource">OPOST</span><h3 id="analyticsCatalogTitle"></h3></div><button type="button" id="analyticsCatalogClose" data-no-global-loading>×</button></div>
+    <div class="analytics-catalog-summary"><strong id="analyticsCatalogCount">0</strong><span data-i18n="analytics_catalog_hint">اضغط لعرض القائمة الأصلية من OPOST</span></div>
+    <div class="analytics-catalog-table-wrap"><table class="analytics-catalog-table"><thead><tr><th data-i18n="catalog_id">ID</th><th data-i18n="catalog_name">الاسم</th><th data-i18n="catalog_accounts">الحسابات المرتبطة</th><th data-i18n="catalog_source">المصدر</th></tr></thead><tbody id="analyticsCatalogBody"></tbody></table></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const row = document.querySelector('.live-status-row');
+  const refresh = document.getElementById('refreshAnalytics');
+  const originalHtml = refresh?.innerHTML || '';
+  let current = row?.dataset.updatedAt || '';
+  let checking = false;
+  const catalogs = {
+    managers: {{ stats.managers|tojson }},
+    offices: {{ stats.offices|tojson }}
+  };
+  const catalogModal = document.getElementById('analyticsCatalogModal');
+  const catalogBody = document.getElementById('analyticsCatalogBody');
+  const catalogTitle = document.getElementById('analyticsCatalogTitle');
+  const catalogCount = document.getElementById('analyticsCatalogCount');
+  const catalogSource = document.getElementById('analyticsCatalogSource');
+
+  function language() {
+    return document.documentElement.lang === 'en' ? 'en' : 'ar';
+  }
+
+  function setButtonBusy(busy) {
+    if (!refresh) return;
+    refresh.disabled = busy;
+    if (busy) {
+      refresh.innerHTML = language() === 'en'
+        ? '<span class="analytics-refresh-spinner">↻</span><span>Refreshing from OPOST…</span>'
+        : '<span class="analytics-refresh-spinner">↻</span><span>جارٍ التحديث من OPOST…</span>';
+    } else {
+      refresh.innerHTML = originalHtml;
+      if (window.applyTranslations) window.applyTranslations();
+    }
+  }
+
+  function showMessage(text, kind='success') {
+    let box = document.getElementById('analyticsRefreshMessage');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'analyticsRefreshMessage';
+      box.className = 'analytics-refresh-message';
+      document.querySelector('.analytics-hero')?.after(box);
+    }
+    box.className = `analytics-refresh-message ${kind}`;
+    box.textContent = text;
+    box.hidden = false;
+  }
+
+  function openCatalog(kind) {
+    const rows = catalogs[kind] || [];
+    const ar = language() !== 'en';
+    catalogTitle.textContent = kind === 'managers'
+      ? (ar ? 'مدراء الحسابات في OPOST' : 'OPOST account managers')
+      : (ar ? 'مكاتب الأعمال في OPOST' : 'OPOST business offices');
+    catalogSource.textContent = kind === 'managers' ? 'Business Account Manager' : 'Business Office';
+    catalogCount.textContent = rows.length;
+    catalogBody.innerHTML = '';
+    for (const row of rows) {
+      const tr = document.createElement('tr');
+      const values = [row.id || '—', row.name || '—', row.count ?? 0, row.source || (kind === 'managers' ? 'Business Account Manager' : 'Business Office')];
+      for (const value of values) { const td=document.createElement('td'); td.textContent=String(value); tr.appendChild(td); }
+      catalogBody.appendChild(tr);
+    }
+    catalogModal?.classList.add('visible');
+    catalogModal?.setAttribute('aria-hidden','false');
+  }
+  function closeCatalog(){ catalogModal?.classList.remove('visible'); catalogModal?.setAttribute('aria-hidden','true'); }
+  document.querySelectorAll('[data-catalog]').forEach(card => {
+    card.addEventListener('click', () => openCatalog(card.dataset.catalog));
+    card.addEventListener('keydown', event => { if(event.key==='Enter'||event.key===' '){ event.preventDefault(); openCatalog(card.dataset.catalog); } });
+  });
+  document.getElementById('analyticsCatalogClose')?.addEventListener('click', closeCatalog);
+  catalogModal?.addEventListener('click', event => { if(event.target===catalogModal) closeCatalog(); });
+  document.addEventListener('keydown', event => { if(event.key==='Escape') closeCatalog(); });
+
+  async function statusCheck() {
+    if (checking) return;
+    checking = true;
+    try {
+      const response = await fetch('/api/analytics', {cache: 'no-store'});
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.updated_at && data.updated_at !== current) {
+        location.reload();
+        return;
+      }
+      const pulse = row?.querySelector('.live-pulse');
+      pulse?.classList.toggle('syncing', !!data.refreshing);
+    } catch (_error) {
+    } finally {
+      checking = false;
+    }
+  }
+
+  refresh?.addEventListener('click', async () => {
+    setButtonBusy(true);
+    showMessage(language() === 'en' ? 'Reading all businesses directly from OPOST…' : 'يتم الآن قراءة جميع الحسابات مباشرة من OPOST…', 'working');
+    try {
+      const response = await fetch('/api/analytics/refresh', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {'Accept': 'application/json'}
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || (language() === 'en' ? 'Refresh failed.' : 'فشل تحديث الإحصائيات.'));
+      }
+      showMessage(language() === 'en' ? 'Analytics updated successfully.' : 'تم تحديث الإحصائيات بنجاح.', 'success');
+      current = data.updated_at || current;
+      // Reload only after the fresh snapshot is physically saved, so every card,
+      // manager count and office count is visibly updated in the same click.
+      location.reload();
+    } catch (error) {
+      showMessage(error.message || String(error), 'error');
+      setButtonBusy(false);
+    }
+  });
+
+  // The server refreshes automatically every minute. This lightweight status
+  // poll only checks whether a newer saved snapshot is ready; it does not query OPOST.
+  setInterval(statusCheck, 10000);
+})();
+</script>
+{% endblock %}
